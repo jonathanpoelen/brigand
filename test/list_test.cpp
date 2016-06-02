@@ -145,7 +145,12 @@ static_assert(
 
 // list with reference
 
-template<class> struct check_t { constexpr bool operator==(check_t) const { return true; } };
+template<class>
+struct check_t
+{
+  constexpr check_t() {}
+  constexpr bool operator==(check_t) const { return true; }
+};
 
 using ref_list = brigand::list<int&,double&>;
 
