@@ -166,6 +166,7 @@ set(SEQUENCES_GROUP
     brigand/sequences/at.hpp
     brigand/sequences/back.hpp
     brigand/sequences/front.hpp
+    brigand/sequences/filled_list.hpp
     brigand/sequences/keys_as_sequence.hpp
     brigand/sequences/list.hpp
     brigand/sequences/make_sequence.hpp
@@ -231,6 +232,7 @@ set(test_files
     test/config_test.cpp
     test/eval_if_test.cpp
     test/erase_c_test.cpp
+    test/filled_list_test.cpp
     test/find.cpp
     test/flatten.cpp
     test/fold.cpp
