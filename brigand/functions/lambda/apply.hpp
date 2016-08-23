@@ -7,6 +7,7 @@
 #pragma once
 
 #include <brigand/functions/lambda/bind.hpp>
+#include <brigand/functions/lambda/call.hpp>
 #include <brigand/sequences/list.hpp>
 #include <brigand/types/args.hpp>
 
@@ -86,6 +87,12 @@ namespace detail
 	struct apply<defer<Lambda>, L, Ls...>
 	{
 		using type = packaged_lcall<Lambda, L, Ls...>;
+	};
+	//call_impl case
+	template <template<class...> class F, typename... Args, typename...Ls>
+	struct apply<call_impl<F>, list<Args...>, Ls...>
+	{
+		using type = F<Args...>;
 	};
 	//packaged_lcall lazy case
 	template <template <typename...> class Lambda, typename... Ts, typename... PLs, typename L, typename...Ls>
