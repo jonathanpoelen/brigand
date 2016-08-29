@@ -7,9 +7,12 @@ Distributed under the Boost Software License, Version 1.0.
 #pragma once
 
 #include <brigand/algorithms/merge.hpp>
+#include <brigand/algorithms/transform.hpp>
 #include <brigand/functions/comparison/less.hpp>
 #include <brigand/functions/lambda/apply.hpp>
 #include <brigand/sequences/append.hpp>
+#include <brigand/sequences/range.hpp>
+#include <brigand/sequences/size.hpp>
 
 namespace brigand
 {
@@ -204,8 +207,90 @@ namespace detail
             typename sort_impl<list<>, list<T255, Ts...>, Comp>::type, Comp
         >;
     };
+
+
+template<class L, class Ints>
+struct map_sort_impl;
+
+template<class... Ts, class... Ints>
+struct map_sort_impl<list<Ts...>, list<Ints...>>
+: list<Ints, Ts>...
+{};
+
+template<class L>
+using map_sort = map_sort_impl<L, range<std::size_t, 0, size<L>::value>>;
+
+template<std::size_t Int, class T>
+T get_val_fn(list<size_t<Int>, T>*);
+
+template<class M, std::size_t Int>
+using get_val = decltype(get_val_fn<Int>(static_cast<M*>(nullptr)));
+
+template<class M, class Int>
+using get_group = list<get_val<M, Int::value * 2>, get_val<M, Int::value * 2 + 1>>;
+
+template<bool odd, class M, class Ints>
+struct groups_impl;
+
+template<class M, class... Ints>
+struct groups_impl<false, M, list<Ints...>>
+{
+  using type = list<get_group<M, Ints>...>;
+};
+
+template<class M, class... Ints>
+struct groups_impl<true, M, list<Ints...>>
+{
+  using type = list<get_group<M, Ints>..., list<get_val<M, sizeof...(Ints)*2>>>;
+};
+
+template<class L>
+using groups = typename groups_impl<bool(size<L>::value&1), map_sort<L>, range<std::size_t, 0, size<L>::value/2>>::type;
+
+template<class Cmp, class L>
+struct cmp_l2_impl
+{ using type = L; };
+
+template<class Comp, class T, class U>
+struct cmp_l2_impl<Comp, list<T,U>>
+: std::conditional<::brigand::apply<Comp, T, U>::value, list<T, U>, list<U, T>>
+{};
+
+template<class Comp, class L>
+using cmp_l2 = typename cmp_l2_impl<Comp, L>::type;
+
+template<class Comp, class L>
+struct merge_l2_impl;
+
+template<class Comp, class L>
+struct merge_l2_impl<Comp, list<L>>
+{ using type = L; };
+
+template<class Comp, class L0, class L1>
+struct merge_l2_impl<Comp, list<L0,L1>>
+: merge_impl<list<>, L0, L1, Comp>
+{};
+
+template<class L, class Comp>
+struct sort2_impl;
+
+template<class... L, class Comp>
+struct sort2_impl<list<L...>, Comp>
+: sort2_impl<groups<list<typename merge_l2_impl<Comp, L>::type...>>, Comp>
+{};
+
+template<class L0, class L1, class Comp>
+struct sort2_impl<list<list<L0, L1>>, Comp>
+: merge_impl<list<>, L0, L1, Comp>
+{};
+
+template<class L, class Comp = less<_1,_2>>
+using sort2 = typename sort2_impl<groups<::brigand::transform<groups<L>, bind<cmp_l2, pin<Comp>, _1>>>, Comp>::type;
+//using sort2 = typename sort2_impl<::brigand::transform<L, bind<list, _1>>, Comp>::type;
+
 }
 
 template <class Seq, class Comp = less<_1,_2>>
+//using sort = typename detail::sort2_impl<transform<detail::groups<Seq>, bind<detail::cmp_l2, pin<Comp>, _1>>, Comp>::type;
 using sort = append<clear<Seq>, typename detail::sort_impl<list<>, wrap<Seq, list>, Comp>::type>;
 }
