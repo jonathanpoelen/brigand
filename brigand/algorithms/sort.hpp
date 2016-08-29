@@ -209,88 +209,70 @@ namespace detail
     };
 
 
-template<class L, class Ints>
+template<class Ints, class L>
 struct map_sort_impl;
 
-template<class... Ts, class... Ints>
-struct map_sort_impl<list<Ts...>, list<Ints...>>
+template<class... Ints, class... Ts>
+struct map_sort_impl<list<Ints...>, list<Ts...>>
 : list<Ints, Ts>...
 {};
 
 template<class L>
-using map_sort = map_sort_impl<L, range<std::size_t, 0, size<L>::value>>;
+using map_sort = map_sort_impl<range<std::size_t, 0, size<L>::value>, L>;
 
 template<std::size_t Int, class T>
 T get_val_fn(list<size_t<Int>, T>*);
 
+template<class Comp, template<class...> class Tpl, std::size_t Int, class T, class U>
+Tpl<Comp, T, U> get_val_fn2(list<size_t<Int>, T>*, list<size_t<Int+1>, U>*);
+
 template<class M, std::size_t Int>
 using get_val = decltype(get_val_fn<Int>(static_cast<M*>(nullptr)));
 
-template<class M, class Int>
-using get_group = list<get_val<M, Int::value * 2>, get_val<M, Int::value * 2 + 1>>;
+template<class Comp, template<class...> class Tpl, class M, class Int>
+using get_group = decltype(get_val_fn2<Comp, Tpl, Int::value * 2>(static_cast<M*>(nullptr), static_cast<M*>(nullptr)));
 
-template<bool odd, class M, class Ints>
+template<bool odd, class Comp, template<class...> class Tpl, template<class...> class Tpl2, class M, class Ints>
 struct groups_impl;
 
-template<class M, class... Ints>
-struct groups_impl<false, M, list<Ints...>>
+template<class Comp, template<class...> class Tpl, template<class...> class Tpl2, class M, class... Ints>
+struct groups_impl<false, Comp, Tpl, Tpl2, M, list<Ints...>>
 {
-  using type = list<get_group<M, Ints>...>;
+  using type = list<get_group<Comp, Tpl, M, Ints>...>;
 };
 
-template<class M, class... Ints>
-struct groups_impl<true, M, list<Ints...>>
+template<class Comp, template<class...> class Tpl, template<class...> class Tpl2, class M, class... Ints>
+struct groups_impl<true, Comp, Tpl, Tpl2, M, list<Ints...>>
 {
-  using type = list<get_group<M, Ints>..., list<get_val<M, sizeof...(Ints)*2>>>;
+  using type = list<get_group<Comp, Tpl, M, Ints>..., Tpl2<get_val<M, sizeof...(Ints)*2>>>;
 };
 
-template<class L>
-using groups = typename groups_impl<bool(size<L>::value&1), map_sort<L>, range<std::size_t, 0, size<L>::value/2>>::type;
-
-template<class Cmp, class L>
-struct cmp_l2_impl
-{ using type = L; };
+template<class L, class Comp, template<class...> class Tpl, template<class...> class Tpl2>
+using groups = typename groups_impl<bool(size<L>::value&1), Comp, Tpl, Tpl2, map_sort<L>, range<std::size_t, 0, size<L>::value/2>>::type;
 
 template<class Comp, class T, class U>
-struct cmp_l2_impl<Comp, list<T,U>>
-: std::conditional<::brigand::apply<Comp, T, U>::value, list<T, U>, list<U, T>>
-{};
-
-template<class Comp, class L>
-using cmp_l2 = typename cmp_l2_impl<Comp, L>::type;
-
-template<class Comp, class L>
-struct merge_l2_impl;
-
-template<class Comp, class L>
-struct merge_l2_impl<Comp, list<L>>
-{ using type = L; };
+using cmp_l2_impl = typename merge_impl<list<>, list<T>, list<U>, Comp>::type;
 
 template<class Comp, class L0, class L1>
-struct merge_l2_impl<Comp, list<L0,L1>>
-: merge_impl<list<>, L0, L1, Comp>
+using merge_l2_impl = typename merge_impl<list<>, L0, L1, Comp>::type;
+
+template<class T> using ident = T;
+
+template<class L, class Comp>
+struct sort2_impl
+: sort2_impl<groups<L, Comp, merge_l2_impl, ident>, Comp>
 {};
 
 template<class L, class Comp>
-struct sort2_impl;
-
-template<class... L, class Comp>
-struct sort2_impl<list<L...>, Comp>
-: sort2_impl<groups<list<typename merge_l2_impl<Comp, L>::type...>>, Comp>
-{};
-
-template<class L0, class L1, class Comp>
-struct sort2_impl<list<list<L0, L1>>, Comp>
-: merge_impl<list<>, L0, L1, Comp>
-{};
+struct sort2_impl<list<L>, Comp>
+{ using type = L; };
 
 template<class L, class Comp = less<_1,_2>>
-using sort2 = typename sort2_impl<groups<::brigand::transform<groups<L>, bind<cmp_l2, pin<Comp>, _1>>>, Comp>::type;
-//using sort2 = typename sort2_impl<::brigand::transform<L, bind<list, _1>>, Comp>::type;
+using sort2 = typename sort2_impl<groups<L, Comp, cmp_l2_impl, list>, Comp>::type;
 
 }
 
 template <class Seq, class Comp = less<_1,_2>>
-//using sort = typename detail::sort2_impl<transform<detail::groups<Seq>, bind<detail::cmp_l2, pin<Comp>, _1>>, Comp>::type;
+//using sort = typename detail::sort2_impl<detail::groups<Seq, Comp, detail::cmp_l2_impl, list>, Comp>::type;
 using sort = append<clear<Seq>, typename detail::sort_impl<list<>, wrap<Seq, list>, Comp>::type>;
 }
