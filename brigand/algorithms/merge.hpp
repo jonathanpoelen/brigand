@@ -49,13 +49,53 @@ namespace brigand
       using right = ::brigand::list<>;
     };
 
+    template<bool, class L0, class L1, class Comp>
+    struct merge_u9_t0;
+
+    template<
+      class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9,
+      class U0, class U1, class U2, class U3, class U4, class U5, class U6, class U7, class U8, class U9, class Comp>
+    struct merge_u9_t0<true, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>
+    {
+      using list = ::brigand::list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9,T0,T1,T2,T3,T4,T5,T6,T7,T8>;
+      using left = ::brigand::list<T9>;
+      using right = ::brigand::list<>;
+    };
+
+    template<
+      class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9,
+      class U0, class U1, class U2, class U3, class U4, class U5, class U6, class U7, class U8, class U9, class Comp>
+    struct merge_u9_t0<false, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>
+    : merge_insert<::brigand::apply<Comp,T0,U0>::value, list<>, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>
+    {};
+
+    template<bool, class L0, class L1, class Comp>
+    struct merge_t9_u0;
+
+    template<
+      class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9,
+      class U0, class U1, class U2, class U3, class U4, class U5, class U6, class U7, class U8, class U9, class Comp>
+    struct merge_t9_u0<true, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>
+    {
+      using list = ::brigand::list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,U0,U1,U2,U3,U4,U5,U6,U7,U8>;
+      using left = ::brigand::list<>;
+      using right = ::brigand::list<U9>;
+    };
+
+    template<
+      class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9,
+      class U0, class U1, class U2, class U3, class U4, class U5, class U6, class U7, class U8, class U9, class Comp>
+    struct merge_t9_u0<false, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>
+    : merge_u9_t0<::brigand::apply<Comp,U9,T0>::value, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>
+    {};
+
     template<
       class... R,
       class T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class... Ts,
       class U0, class U1, class U2, class U3, class U4, class U5, class U6, class U7, class U8, class U9, class... Us, class Comp>
     struct merge_impl<list<R...>, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9,Ts...>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9,Us...>, Comp>
     {
-      using sub = merge_insert<::brigand::apply<Comp,T0,U0>::value, list<>, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>;
+      using sub = merge_t9_u0<::brigand::apply<Comp,T9,U0>::value, list<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9>, list<U0,U1,U2,U3,U4,U5,U6,U7,U8,U9>, Comp>;
       using type = typename merge_impl<
         append<list<R...>, typename sub::list>,
         append<typename sub::left, list<Ts...>>,
