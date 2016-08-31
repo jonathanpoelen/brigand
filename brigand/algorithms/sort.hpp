@@ -27,6 +27,11 @@ namespace detail
   struct sort_impl<list<list<>, list<T0>>, Comp>
   { using type = list<T0>; };
 
+  template<class T0, class T1, class Comp>
+  struct sort_impl<list<list<T0>, list<T1>>, Comp>
+  : std::conditional<::brigand::apply<Comp,T0,T1>::value, list<T0,T1>, list<T1,T0>>
+  {};
+
   template<class L, class Comp>
   using sort = typename sort_impl<split_at<L, size_t<size<L>::value/2>>, Comp>::type;
 
