@@ -1,8 +1,12 @@
 #include <brigand/algorithms/sort.hpp>
+#include <brigand/algorithms/transform.hpp>
+#include <brigand/functions/arithmetic/modulo.hpp>
 #include <brigand/functions/comparison/greater.hpp>
 #include <brigand/functions/comparison/less.hpp>
 #include <brigand/functions/misc/sizeof.hpp>
 #include <brigand/sequences/list.hpp>
+#include <brigand/sequences/pair.hpp>
+#include <brigand/sequences/range.hpp>
 #include <brigand/types/bool.hpp>
 #include <cstddef>
 
@@ -75,6 +79,39 @@ brigand::sort<type_list,
 
 size_t_list<1, 2> sort_test25 = brigand::sort<size_t_list<2, 1>>{};
 size_t_list<1> sort_test26 = brigand::sort<size_t_list<1>>{};
+
+
+// stable_sort
+template<class T> using t_ = typename T::type;
+using list_pair_20_mod_5 = brigand::transform<
+  brigand::range<std::size_t, 0, 20>,
+  brigand::range<std::size_t, 0, 20>,
+  brigand::bind<
+    brigand::pair,
+    brigand::bind<
+      t_,
+      brigand::bind<
+        brigand::modulo,
+        brigand::_1,
+        std::integral_constant<std::size_t, 5>
+      >
+    >,
+    brigand::_2
+  >
+>;
+
+template<class T, class U> using first_less = brigand::bool_<(T::first_type::value < U::first_type::value)>;
+
+template<std::size_t i>
+using pair4 = brigand::list<
+  brigand::pair<brigand::size_t<i>, brigand::size_t<i>>,
+  brigand::pair<brigand::size_t<i>, brigand::size_t<i+5>>,
+  brigand::pair<brigand::size_t<i>, brigand::size_t<i+10>>,
+  brigand::pair<brigand::size_t<i>, brigand::size_t<i+15>>
+>;
+brigand::append<pair4<0>, pair4<1>, pair4<2>, pair4<3>, pair4<4>>
+sorted_list_pair_20_mod_5 = brigand::stable_sort<list_pair_20_mod_5, brigand::bind<first_less, brigand::_1, brigand::_2>>{};
+
 
 namespace custom
 {

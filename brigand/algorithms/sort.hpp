@@ -29,7 +29,7 @@ namespace detail
 
   template<class T0, class T1, class Comp>
   struct sort_impl<list<list<T0>, list<T1>>, Comp>
-  : std::conditional<::brigand::apply<Comp,T0,T1>::value, list<T0,T1>, list<T1,T0>>
+  : std::conditional<!::brigand::apply<Comp,T1,T0>::value, list<T0,T1>, list<T1,T0>>
   {};
 
   template<class L, class Comp>
@@ -43,4 +43,7 @@ namespace detail
 
   template <class Seq, class Comp = less<_1,_2>>
   using sort = append<clear<Seq>, detail::sort<wrap<Seq, list>, Comp>>;
+
+  template <class Seq, class Comp = less<_1,_2>>
+  using stable_sort = sort<Seq, Comp>;
 }
