@@ -16,27 +16,58 @@ namespace brigand
 {
 namespace detail
 {
-  template<class L, class Comp>
+  template<class L0, class L1, class Comp>
   struct sort_impl;
 
   template<class Comp>
-  struct sort_impl<list<list<>, list<>>, Comp>
+  struct sort_impl<list<>, list<>, Comp>
   { using type = list<>; };
 
   template<class T0, class Comp>
-  struct sort_impl<list<list<>, list<T0>>, Comp>
+  struct sort_impl<list<>, list<T0>, Comp>
   { using type = list<T0>; };
 
   template<class T0, class T1, class Comp>
-  struct sort_impl<list<list<T0>, list<T1>>, Comp>
+  struct sort_impl<list<T0>, list<T1>, Comp>
   : std::conditional<!::brigand::apply<Comp,T1,T0>::value, list<T0,T1>, list<T1,T0>>
   {};
 
+  template<template<class...> class F, class L, class... Args>
+  struct take_and_drop;
+
+  template<template<class...> class F, class... Ts, class... Args>
+  struct take_and_drop<F, list<Ts...>, Args...>
+  {
+    using type = F<take_impl<size_t<sizeof...(Ts)/2>, Ts...>, drop_impl<size_t<sizeof...(Ts)/2>, Ts...>, Args...>;
+  };
+
+  template<template<class...> class F, class T, class U, class... Args>
+  struct take_and_drop<F, list<T, U>, Args...>
+  {
+    using type = F<list<T>, list<U>, Args...>;
+  };
+
+  template<template<class...> class F, class T, class... Args>
+  struct take_and_drop<F, list<T>, Args...>
+  {
+    using type = F<list<>, list<T>, Args...>;
+  };
+
+  template<class L>
+  struct exhibit;
+  template<class... Ts>
+  struct exhibit<list<Ts...>>
+  {
+    template<template<class...> class F, class... Args>
+    using invoke = F<take_impl<size_t<sizeof...(Ts)/2>, Ts...>, drop_impl<size_t<sizeof...(Ts)/2>, Ts...>, Args...>;
+  };
+
   template<class L, class Comp>
-  using sort = typename sort_impl<split_at<L, size_t<size<L>::value/2>>, Comp>::type;
+  using sort = typename take_and_drop<sort_impl, L, Comp>::type::type;
+  //using sort = typename exhibit<L>::template invoke<sort_impl, Comp>::type;
 
   template<class L0, class L1, class Comp>
-  struct sort_impl<list<L0, L1>, Comp>
+  struct sort_impl
   : merge_impl<list<>, sort<L0, Comp>, sort<L1, Comp>, Comp>
   {};
 }
