@@ -32,25 +32,28 @@ namespace detail
   : std::conditional<!::brigand::apply<Comp,T1,T0>::value, list<T0,T1>, list<T1,T0>>
   {};
 
-  template<template<class...> class F, class L, class... Args>
+  template<class L>
   struct take_and_drop;
 
-  template<template<class...> class F, class... Ts, class... Args>
-  struct take_and_drop<F, list<Ts...>, Args...>
+  template<class... Ts>
+  struct take_and_drop<list<Ts...>>
   {
-    using type = F<take_impl<size_t<sizeof...(Ts)/2>, Ts...>, drop_impl<size_t<sizeof...(Ts)/2>, Ts...>, Args...>;
+    using take = take_impl<size_t<sizeof...(Ts)/2>, Ts...>;
+    using drop = drop_impl<size_t<sizeof...(Ts)/2>, Ts...>;
   };
 
-  template<template<class...> class F, class T, class U, class... Args>
-  struct take_and_drop<F, list<T, U>, Args...>
+  template<class T, class U>
+  struct take_and_drop<list<T, U>>
   {
-    using type = F<list<T>, list<U>, Args...>;
+    using take = list<T>;
+    using drop = list<U>;
   };
 
-  template<template<class...> class F, class T, class... Args>
-  struct take_and_drop<F, list<T>, Args...>
+  template<class T>
+  struct take_and_drop<list<T>>
   {
-    using type = F<list<>, list<T>, Args...>;
+    using take = list<>;
+    using drop = list<T>;
   };
 
   template<class L>
@@ -63,7 +66,8 @@ namespace detail
   };
 
   template<class L, class Comp>
-  using sort = typename take_and_drop<sort_impl, L, Comp>::type::type;
+  using sort = typename sort_impl<typename take_and_drop<L>::take, typename take_and_drop<L>::drop, Comp>::type;
+  //using sort = typename take_and_drop<sort_impl, L, Comp>::type::type;
   //using sort = typename exhibit<L>::template invoke<sort_impl, Comp>::type;
 
   template<class L0, class L1, class Comp>
