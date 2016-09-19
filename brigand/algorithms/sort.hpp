@@ -59,7 +59,7 @@ namespace detail
   struct exhibit<list<Ts...>>
   {
     template<template<class...> class F, class... Args>
-    using invoke = F<take_impl<size_t<sizeof...(Ts)/2>, Ts...>, drop_impl<size_t<sizeof...(Ts)/2>, Ts...>, Args...>;
+    using invoke = F<Args..., Ts...>;
   };
 
   template<class L, class Comp>
